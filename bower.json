@@ -1,0 +1,21 @@
+{
+  "name": "purescript-virtual-dom",
+  "description": "virtual-dom bindings for PureScript",
+  "keywords": [
+    "purescript"
+  ],
+  "ignore": [
+    "**/.*",
+    "bower_components",
+    "node_modules",
+    "output",
+    "tests",
+    "tmp",
+    "bower.json",
+    "Gruntfile.js",
+    "package.json"
+  ],
+  "dependencies": {
+    "purescript-maybe": "~0.1.3"
+  }
+}

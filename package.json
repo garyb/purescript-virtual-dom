@@ -1,0 +1,17 @@
+{
+  "name": "purescript-virtual-dom",
+  "description": "virtual-dom bindings for PureScript",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "virtual-dom": "0.0.16",
+    "vtree": "0.0.16"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.4",
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-contrib-copy": "^0.5.0",
+    "grunt-execute": "^0.1.5",
+    "grunt-purescript": "~0.5.0"
+  }
+}
