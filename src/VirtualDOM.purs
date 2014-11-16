@@ -31,4 +31,10 @@ foreign import patch'
   "var patch$prime = require('virtual-dom/patch');" :: Fn2 Node PatchObject Node
 
 patch :: forall e. PatchObject -> Node -> Eff (dom :: DOM | e) Node
-patch p n = return $ runFn2 patch' n p
+patch p n = mkEff \_ -> runFn2 patch' n p
+
+foreign import mkEff """
+  function mkEff(action) {
+    return action;
+  }
+  """ :: forall eff a. (Unit -> a) -> Eff eff a
