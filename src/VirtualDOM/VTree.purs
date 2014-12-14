@@ -1,15 +1,11 @@
 module VirtualDOM.VTree
   ( VTree()
   , TagName()
-  , Key()
-  , Namespace()
   , vnode
   , vtext
   ) where
 
 import Data.Function
-import Data.Maybe
-
 foreign import data VTree :: *
 
 foreign import showVTreeImpl
@@ -19,24 +15,32 @@ instance showVTree :: Show VTree where
   show = showVTreeImpl
 
 type TagName = String
-type Key = String
-type Namespace = String
-
-foreign import unsafeNull
-  "var unsafeNull = null;" :: forall a. a
 
 foreign import vnode' """
   var vnode$prime = (function() {
     var VNode = require('vtree/vnode');
-    return function (name, props, children, key, ns) {
+   
+    return function (name, props, children) {
+      var key = undefined;
+      var ns = undefined;
+
+      if(props.namespace) {
+        ns = props.namespace;
+        props.namespace = undefined;
+      }
+
+      if(props.key) {
+        key = props.key;
+        props.key = undefined;
+      }
+
       return new VNode(name, props, children, key, ns);
     };
   }());
-  """ :: forall props. Fn5 TagName { | props } [VTree] Key Namespace VTree
+  """ :: forall props. Fn3 TagName { | props} [VTree] VTree
 
-vnode :: forall props. TagName -> { | props } -> [VTree] -> Maybe Key -> Maybe Namespace -> VTree
-vnode name props children key ns =
-  runFn5 vnode' name props children (fromMaybe unsafeNull key) (fromMaybe unsafeNull ns)
+vnode :: forall props. TagName -> { | props} -> [VTree] -> VTree
+vnode name props children = runFn3 vnode' name props children
 
 foreign import vtext """
   var vtext = (function() {
