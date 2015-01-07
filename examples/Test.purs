@@ -3,6 +3,7 @@ module Test where
 import VirtualDOM
 import VirtualDOM.VTree
 import Debug.Trace
+import Control.Monad.Eff
 
 
 doc1 :: VTree
@@ -30,12 +31,45 @@ doc5 = vnode "div"
                }
            } [vtext "I do it with style."]
 
+doc6 :: VTree
+doc6 = vnode "div" {} [vtext "with invalid widget", widget {}]
+
+doc7 :: VTree
+doc7 = 
+  let d = void
+  in vnode "div" {} [ vtext "with valid widget and thunk"
+                    , widget {init:d, update:d, destroy:d}
+                    , thunk {}
+                    ]
+
+doc8 :: VTree
+doc8 = 
+  let d = void
+  in vnode "div" {} [
+      vnode "div" { hookProp: vhook { hook:d, unhook:d} 
+                  , customProp: "my key" 
+                  } 
+                  [vtext "with hooks"]
+      ]
+
+printH :: forall eff a. (Show a) => String -> a -> Eff (trace :: Trace | eff) Unit
+printH hdr o = do 
+  print $ "=== " ++ hdr ++ " ===" 
+  print o
+
 main = do
-  print doc1
-  print doc2
-  print doc3
-  print doc4
-  print doc5
+
+  printH "doc1" doc1
+  printH "doc2" doc2
+  printH "doc3" doc3
+  printH "doc4" doc4
+  printH "doc5" doc5
+  printH "doc6" doc6
+  printH "doc7" doc7
+  printH "doc8" doc8
   
-  print $ diff doc1 doc2
-  print $ diff doc1 doc3
+  printH "diff doc1 doc2" $ diff doc1 doc2
+  printH "diff doc1 doc3" $ diff doc1 doc3
+
+  printH "diff doc6 doc7" $ diff doc6 doc7
+  printH "diff doc6 doc8" $ diff doc6 doc8
