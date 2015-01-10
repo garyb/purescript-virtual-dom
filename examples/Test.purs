@@ -4,52 +4,78 @@ import VirtualDOM
 import VirtualDOM.VTree
 import Debug.Trace
 import Control.Monad.Eff
+import Data.Maybe
+import DOM
 
+foreign import createDOMElement
+  "function createDOMElement(name) {\
+  \  return function() {\
+  \    return document.createElement(name);\
+  \  };\
+  \}" :: forall eff. String -> Eff (dom :: DOM | eff) Node 
+
+defVNode = 
+  { namespace:  Nothing -- required by VNodeOpts type
+  , key:        Nothing -- required by VNodeOpts type
+  , attributes: Nothing -- required by VNodeOpts type
+  , style:      Nothing -- required by VNodeOpts type
+  , customHook: Nothing :: Maybe VHook
+  , customProp: Nothing :: Maybe String
+  }
 
 doc1 :: VTree
-doc1 = vnode "div" {} [vtext "hello"]
+doc1 = vnode "div" defVNode [vtext "hello"]
 
 doc2 :: VTree
-doc2 = vnode "div" {} [vtext "hello", vtext "world"]
+doc2 = vnode "div" defVNode [vtext "hello", vtext "world"]
 
 doc3 :: VTree
 doc3 = vtext "hello world"
 
 doc4 :: VTree
-doc4 = vnode "div" 
-    { "namespace": "http://www.w3.org/2000/svg"
-    , "key": "my key"
+doc4 = 
+  vnode "div" defVNode
+    { namespace = Just "http://www.w3.org/2000/svg"
+    , key       = Just "my key"
     } [vtext "Am I SVG?"]
 
 doc5 :: VTree
-doc5 = vnode "div"
-    { "key": "another key"
-    , "namespace": "http://www.w3.org/1999/xhtml"
-    , "style": { "color":  "red"
-               , "height": "10px"
-               , "width":  "100px"
-               }
-           } [vtext "I do it with style."]
+doc5 = 
+  vnode "div" defVNode
+    { key       = Just "another key"
+    , namespace = Just "http://www.w3.org/1999/xhtml"
+    , style     = Just { color:  "red"
+                       , height: "10px"
+                       , width:  "100px"
+                       }
+    } [vtext "I do it with style."]
+
+basicWidget = 
+  { init:     const $ createDOMElement "div" -- invoke widget code here 
+  , update:   \_ _ -> return unit            -- update logic goes here
+  , destroy:  \_   -> return unit            -- destroy logic goes here
+  } :: WidgetOpts _ _ _
 
 doc6 :: VTree
-doc6 = vnode "div" {} [vtext "with invalid widget", widget {}]
+doc6 = vnode "div" defVNode [vtext "with widget", widget basicWidget]
 
 doc7 :: VTree
 doc7 = 
-  let d = void
-  in vnode "div" {} [ vtext "with valid widget and thunk"
-                    , widget {init:d, update:d, destroy:d}
-                    , thunk {}
-                    ]
+  vnode "div" defVNode 
+      [ vtext "with valid widget and thunk"
+      , widget basicWidget
+      , thunk {}
+      ]
 
 doc8 :: VTree
 doc8 = 
-  let d = void
-  in vnode "div" {} [
-      vnode "div" { hookProp: vhook { hook:d, unhook:d} 
-                  , customProp: "my key" 
-                  } 
-                  [vtext "with hooks"]
+  let d = \node string -> return unit -- hook logic goes here
+  in vnode "div" defVNode [
+      vnode "div" defVNode
+        { customHook = Just $ vhook { hook:d, unhook:d} 
+        , customProp = Just "my customProp" 
+        }
+        [vtext "with hooks"]
       ]
 
 printH :: forall eff a. (Show a) => String -> a -> Eff (trace :: Trace | eff) Unit
