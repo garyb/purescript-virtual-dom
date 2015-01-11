@@ -64,8 +64,23 @@ doc7 =
   vnode "div" defVNode 
       [ vtext "with valid widget and thunk"
       , widget basicWidget
-      , thunk {}
+      -- This thunk generates a new VTree 1 if a previous node is not available, 
+      -- and VTree 2 if such a node is available.
+      , thunk $ maybe (vnode "div" defVNode [vtext "inside thunk 7 tree 1"]) 
+                      \_ -> vnode "div" defVNode [vtext "inside thunk 7 tree 2"]
       ]
+
+-- Make an equivalent (to thunk) but not identical tree to force thunk 
+-- thunk evaluation when doing diff
+doc7B :: VTree
+doc7B = 
+  vnode "div" defVNode 
+      [ vtext "with valid widget and thunk"
+      , widget basicWidget
+      , thunk $ maybe (vnode "div" defVNode [vtext "inside thunk 7B tree 1"]) 
+                      \_ -> vnode "div" defVNode [vtext "inside thunk 7B tree 2"]
+      ]
+
 
 doc8 :: VTree
 doc8 = 
@@ -98,4 +113,6 @@ main = do
   printH "diff doc1 doc3" $ diff doc1 doc3
 
   printH "diff doc6 doc7" $ diff doc6 doc7
+  printH "diff doc7 doc7B"$ diff doc7 doc7B
   printH "diff doc6 doc8" $ diff doc6 doc8
+

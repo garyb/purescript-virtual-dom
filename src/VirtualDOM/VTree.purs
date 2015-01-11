@@ -107,18 +107,33 @@ widget = toOptions >>> widget'
 
 -- * Thunk
 
-foreign import thunk  """
-  var thunk  = (function() { 
-    return function (props) {
-      var rThunk  = { type: 'Thunk'};
-       
-      if(props.vnode)   { rThunk.vnode  = props.vnode };
-      if(props.render)  { rThunk.render = props.render }; 
-
+foreign import thunk'  """
+  var thunk$prime  = (function() { 
+    return function (renderFn, nothing, just) {
+      var rThunk  = { type: 'Thunk'
+                    , render: function(prevNode) { 
+                                if (prevNode === null)
+                                  return renderFn(nothing);
+                                else
+                                  return renderFn(just(prevNode));
+                              }
+                    };
+      // No need for vnode here.  It is used internally by virtual-dom to cache
+      // the result of render.
       return rThunk;
     };
   }());
-  """ :: forall props. { | props} -> VTree
+  """ :: Fn3  (Maybe VTree -> VTree) 
+              (Maybe VTree) 
+              (VTree -> Maybe VTree) 
+              VTree
+
+-- Render a VTree using custom logic function.  The logic can examine the 
+-- previous VTree before returning the new (or same) one.  The result of the 
+-- render function must be a vnode, vtext, or widget.  This constraint is not
+-- enforced by the types.
+thunk :: (Maybe VTree -> VTree) -> VTree
+thunk render = runFn3 thunk' render Nothing Just
 
 
 -- * VHook
