@@ -1,6 +1,9 @@
 module VirtualDOM.VTree
   ( VTree()
+  , VNodeOpts()
+  , WidgetOpts()
   , VHook()
+  , VHookOpts()
   , TagName()
   , vnode
   , vtext
@@ -10,6 +13,11 @@ module VirtualDOM.VTree
   ) where
 
 import Data.Function
+import DOM
+import Data.Foreign.Options
+import Data.Maybe
+import Control.Monad.Eff
+
 
 foreign import data VTree :: *
 
@@ -19,7 +27,18 @@ foreign import showVTreeImpl
 instance showVTree :: Show VTree where
   show = showVTreeImpl
 
+
+-- * VNode
+
 type TagName = String
+
+type VNodeOpts att sty cust = 
+  { key         :: Maybe String
+  , namespace   :: Maybe String
+  , attributes  :: Maybe {|att}
+  , style       :: Maybe {|sty}
+  | cust
+  }
 
 foreign import vnode' """
   var vnode$prime = (function() {
@@ -42,10 +61,13 @@ foreign import vnode' """
       return new VNode(name, props, children, key, ns);
     };
   }());
-  """ :: forall props. Fn3 TagName { | props} [VTree] VTree
+  """ :: forall att sty cust. Fn3 TagName (Options (VNodeOpts att sty cust)) [VTree] VTree
 
-vnode :: forall props. TagName -> { | props} -> [VTree] -> VTree
-vnode name props children = runFn3 vnode' name props children
+vnode :: forall att sty cust. TagName -> VNodeOpts att sty cust -> [VTree] -> VTree
+vnode name props children = runFn3 vnode' name (toOptions props) children
+
+
+-- * VText
 
 foreign import vtext """
   var vtext = (function() {
@@ -56,8 +78,17 @@ foreign import vtext """
   }());
   """ :: String -> VTree
 
-foreign import widget """
-  var widget = (function() { 
+
+-- * Widget
+
+type WidgetOpts a b c = 
+  { init    :: Unit -> Eff (|a) Node
+  , update  :: VTree -> Node -> Eff (|b) Unit
+  , destroy :: Node -> Eff (|c) Unit
+  }
+
+foreign import widget' """
+  var widget$prime = (function() { 
     return function (props) {
       var rWidget = { type: 'Widget'};
        
@@ -68,38 +99,73 @@ foreign import widget """
       return rWidget;
     };
   }());
-  """ :: forall props. { | props} -> VTree
+  """ :: forall a b c. Options (WidgetOpts a b c) -> VTree
 
-foreign import thunk  """
-  var thunk  = (function() { 
-    return function (props) {
-      var rThunk  = { type: 'Thunk'};
-       
-      if(props.vnode)   { rThunk.vnode  = props.vnode };
-      if(props.render)  { rThunk.render = props.render }; 
+widget :: forall a b c. WidgetOpts a b c -> VTree
+widget = toOptions >>> widget'
 
+
+-- * Thunk
+
+foreign import thunk'  """
+  var thunk$prime  = (function() { 
+    return function (renderFn, nothing, just) {
+      var rThunk  = { type: 'Thunk'
+                    , render: function(prevNode) { 
+                                if (prevNode === null)
+                                  return renderFn(nothing);
+                                else
+                                  return renderFn(just(prevNode));
+                              }
+                    };
+      // No need for vnode here.  It is used internally by virtual-dom to cache
+      // the result of render.
       return rThunk;
     };
   }());
-  """ :: forall props. { | props} -> VTree
+  """ :: Fn3  (Maybe VTree -> VTree) 
+              (Maybe VTree) 
+              (VTree -> Maybe VTree) 
+              VTree
 
-foreign import data VHook :: *
+-- Render a VTree using custom logic function.  The logic can examine the 
+-- previous VTree before returning the new (or same) one.  The result of the 
+-- render function must be a vnode, vtext, or widget.  This constraint is not
+-- enforced by the types.
+thunk :: (Maybe VTree -> VTree) -> VTree
+thunk render = runFn3 thunk' render Nothing Just
 
-foreign import vhook  """
-  var vhook  = (function() { 
+
+-- * VHook
+
+foreign import data VHookObject :: *
+type VHook = Opaque VHookObject
+
+type VHookOpts a b = 
+  { hook    :: Node -> String -> Eff (|a) Unit
+  , unhook  :: Node -> String -> Eff (|b) Unit
+  }
+
+foreign import vhook'  """
+  var vhook$prime = (function() { 
     return function (props) {
       var rVHook  = function () { };
       if(props.hook)   { rVHook.prototype.hook    = props.hook };
       if(props.unhook) { rVHook.prototype.unhook  = props.unhook }; 
-      return new rVHook;
+      return new rVHook();
     };
   }());
-  """ :: forall props. { | props } -> VHook
+  """ :: forall a b. Options (VHookOpts a b) -> VHookObject
+
+vhook :: forall a b. VHookOpts a b -> VHook
+vhook = toOptions >>> vhook' >>> Opaque 
+-- make opaque so toOptions never converts it to an object literal.  If
+-- converted, the hooks in the prototype are lost.
 
 foreign import showVHookImpl
-  "var showVHookImpl = JSON.stringify;" :: VHook -> String
+  "var showVHookImpl = JSON.stringify;" :: VHookObject -> String
 
-instance showVHook :: Show VHook where
-  show = showVHookImpl
+instance showVHook :: Show (Opaque VHookObject) where
+  show (Opaque v) = showVHookImpl v
 
 

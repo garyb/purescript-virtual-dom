@@ -16,6 +16,7 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-dom": "~0.1.1"
+    "purescript-dom": "~0.1.1",
+    "purescript-foreign-options": "~0.1.0"
   }
 }
