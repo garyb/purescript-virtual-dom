@@ -4,8 +4,7 @@
   "private": true,
   "license": "MIT",
   "dependencies": {
-    "virtual-dom": "0.0.16",
-    "vtree": "0.0.16"
+    "virtual-dom": "1.0.0"
   },
   "devDependencies": {
     "grunt": "~0.4.4",

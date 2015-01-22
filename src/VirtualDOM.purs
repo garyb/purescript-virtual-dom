@@ -10,6 +10,8 @@ import Data.Function
 import DOM
 import VirtualDOM.VTree
 
+-- PatchObject represents an Array<VPatch>, where each VPatch is a patch 
+-- operation.  See virtual-dom/docs.jsig for details.                             
 foreign import data PatchObject :: *
 
 foreign import showPatchObjectImpl
