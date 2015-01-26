@@ -4,6 +4,7 @@ import VirtualDOM
 import VirtualDOM.VTree
 import Debug.Trace
 import Control.Monad.Eff
+import Data.Maybe
 
 
 doc1 :: VTree
@@ -39,8 +40,23 @@ doc7 =
   let d = void
   in vnode "div" {} [ vtext "with valid widget and thunk"
                     , widget {init:d, update:d, destroy:d}
-                    , thunk {}
+                    , thunk $ maybe 
+                        (vnode "div" {} [vtext "inside thunk, doc 7 tree 1"])
+                        (\_ -> vnode "div" {} [vtext "inside thunk, doc 7 tree 2"])
                     ]
+
+-- Make an equivalent (to thunk) but not *identical* tree to force thunk 
+-- evaluation when doing diff.
+doc7B :: VTree
+doc7B = 
+  let d = void
+  in vnode "div" {} [ vtext "with valid widget and thunk"
+                    , widget {init:d, update:d, destroy:d}
+                    , thunk $ maybe 
+                        (vnode "div" {} [vtext "inside thunk, doc 7B tree 1"])
+                        (\_ -> vnode "div" {} [vtext "inside thunk, doc 7B tree 2"])
+                    ]
+
 
 doc8 :: VTree
 doc8 = 
@@ -72,4 +88,5 @@ main = do
   printH "diff doc1 doc3" $ diff doc1 doc3
 
   printH "diff doc6 doc7" $ diff doc6 doc7
+  printH "diff doc7 doc7B"$ diff doc7 doc7B
   printH "diff doc6 doc8" $ diff doc6 doc8
