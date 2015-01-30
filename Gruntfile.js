@@ -13,6 +13,12 @@ module.exports = function(grunt) {
 
     pscMake: ["<%=libFiles%>"],
     dotPsci: ["<%=libFiles%>"],
+    pscDocs: {
+      readme: {
+        src: "src/**/*.purs",
+        dest: "docs/Module.md"
+      }
+    },
 
     psc: {
       exampleTest: {
@@ -21,7 +27,7 @@ module.exports = function(grunt) {
         dest: "tmp/Test.js"
       }
     },
-    
+
     copy: [
       {
         expand: true,
@@ -40,10 +46,10 @@ module.exports = function(grunt) {
 
   grunt.loadNpmTasks("grunt-contrib-copy");
   grunt.loadNpmTasks("grunt-contrib-clean");
-  grunt.loadNpmTasks("grunt-execute")
+  grunt.loadNpmTasks("grunt-execute");
   grunt.loadNpmTasks("grunt-purescript");
 
-  grunt.registerTask("make", ["pscMake", "dotPsci"]);
+  grunt.registerTask("make", ["pscMake", "dotPsci", "pscDocs"]);
   grunt.registerTask("test", ["psc", "copy", "execute"]);
   grunt.registerTask("default", ["clean", "make", "test"]);
 };

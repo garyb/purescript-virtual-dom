@@ -2,7 +2,12 @@
   "name": "purescript-virtual-dom",
   "description": "virtual-dom bindings for PureScript",
   "keywords": [
-    "purescript"
+    "purescript",
+    "virtual-dom"
+  ],
+  "authors": [
+    "Gary Burgess <gary.burgess@gmail.com>",
+    "Daniel Austin <dan@fluffynukeit.com>"
   ],
   "ignore": [
     "**/.*",
@@ -17,6 +22,6 @@
   ],
   "dependencies": {
     "purescript-dom": "~0.1.1",
-    "purescript-maybe":"*"
+    "purescript-maybe":"~0.2.1"
   }
 }
