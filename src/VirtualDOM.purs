@@ -1,42 +1,24 @@
 module VirtualDOM
-  ( PatchObject()
+  ( Patch()
   , createElement
   , diff
   , patch
   ) where
 
-import Control.Monad.Eff
-import Data.Function
-import DOM
-import VirtualDOM.VTree
+import Prelude
+import Control.Monad.Eff (Eff())
+import DOM (DOM(), Node())
+import VirtualDOM.VTree (VTree())
 
--- PatchObject represents an Array<VPatch>, where each VPatch is a patch 
--- operation.  See virtual-dom/docs.jsig for details.                             
-foreign import data PatchObject :: *
+data Patch
 
-foreign import showPatchObjectImpl
-  "var showPatchObjectImpl = JSON.stringify;" :: PatchObject -> String
+foreign import showPatchImpl :: Patch -> String
 
-instance showPatchObject :: Show PatchObject where
-  show = showPatchObjectImpl
+instance showPatchObject :: Show Patch where
+  show = showPatchImpl
 
-foreign import createElement
-  "var createElement = require('virtual-dom/create-element');" :: VTree -> Node
+foreign import createElement :: forall eff. VTree -> Eff (dom :: DOM | eff) Node
 
-foreign import diff'
-  "var diff$prime = require('virtual-dom/diff');" :: Fn2 VTree VTree PatchObject
+foreign import diff :: VTree -> VTree -> Patch
 
-diff :: VTree -> VTree -> PatchObject
-diff = runFn2 diff'
-
-foreign import patch'
-  "var patch$prime = require('virtual-dom/patch');" :: Fn2 Node PatchObject Node
-
-patch :: forall e. PatchObject -> Node -> Eff (dom :: DOM | e) Node
-patch p n = mkEff \_ -> runFn2 patch' n p
-
-foreign import mkEff """
-  function mkEff(action) {
-    return action;
-  }
-  """ :: forall eff a. (Unit -> a) -> Eff eff a
+foreign import patch :: forall eff. Patch -> Node -> Eff (dom :: DOM | eff) Node

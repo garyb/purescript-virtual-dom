@@ -9,19 +9,23 @@
     "Gary Burgess <gary.burgess@gmail.com>",
     "Daniel Austin <dan@fluffynukeit.com>"
   ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/garyb/purescript-virtual-dom.git"
+  },
   "ignore": [
     "**/.*",
     "bower_components",
     "node_modules",
     "output",
-    "tests",
-    "tmp",
+    "test",
     "bower.json",
-    "Gruntfile.js",
     "package.json"
   ],
   "dependencies": {
-    "purescript-dom": "~0.1.1",
-    "purescript-maybe":"~0.2.1"
+    "purescript-dom": "^0.1.2",
+    "purescript-eff": "^0.1.0",
+    "purescript-nullable": "^0.2.0"
   }
 }

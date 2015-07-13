@@ -1,16 +1,12 @@
 {
-  "name": "purescript-virtual-dom",
-  "description": "virtual-dom bindings for PureScript",
   "private": true,
-  "license": "MIT",
-  "dependencies": {
-    "virtual-dom": "1.0.0"
-  },
   "devDependencies": {
-    "grunt": "~0.4.4",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-copy": "^0.5.0",
-    "grunt-execute": "^0.1.5",
-    "grunt-purescript": "~0.5.0"
+    "gulp": "^3.8.11",
+    "gulp-jscs": "^1.6.0",
+    "gulp-jshint": "^1.11.2",
+    "gulp-purescript": "^0.5.0"
+  },
+  "dependencies": {
+    "virtual-dom": "^2.0.1"
   }
 }

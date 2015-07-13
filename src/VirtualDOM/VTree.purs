@@ -1,121 +1,66 @@
-module VirtualDOM.VTree
-  ( VTree()
-  , VHook()
-  , TagName()
-  , vnode
-  , vtext
-  , widget
-  , thunk
-  , vhook
-  ) where
+module VirtualDOM.VTree where
+  -- ( VTree()
+  -- , VHook()
+  -- , TagName()
+  -- , vnode
+  -- , vtext
+  -- , widget
+  -- , thunk
+  -- , vhook
+  -- ) where
 
-import Data.Function
+import Prelude
+
+-- import Data.Function
 import Data.Maybe
+import Data.Nullable
 
-foreign import data VTree :: *
+data VTree
 
-foreign import showVTreeImpl
-  "var showVTreeImpl = JSON.stringify;" :: VTree -> String
+foreign import showVTreeImpl :: VTree -> String
 
 instance showVTree :: Show VTree where
   show = showVTreeImpl
 
-type TagName = String
+newtype TagName = TagName String
 
-foreign import vnode' """
-  var vnode$prime = (function() {
-    var VNode = require('virtual-dom/vnode/vnode');
-   
-    return function (name, props, children) {
-      var key = undefined;
-      var ns = undefined;
+instance eqTagName :: Eq TagName where
+  eq (TagName x) (TagName y) = x == y
 
-      if(props.namespace) {
-        ns = props.namespace;
-        props.namespace = undefined;
-      }
+instance ordTagName :: Ord TagName where
+  compare (TagName x) (TagName y) = compare x y
 
-      if(props.key) {
-        key = props.key;
-        props.key = undefined;
-      }
+instance showTagName :: Show TagName where
+  show (TagName s) = "TagName " ++ s
 
-      return new VNode(name, props, children, key, ns);
-    };
-  }());
-  """ :: forall props. Fn3 TagName { | props} [VTree] VTree
+newtype Namespace = Namespace String
 
-vnode :: forall props. TagName -> { | props} -> [VTree] -> VTree
-vnode name props children = runFn3 vnode' name props children
+instance eqNamespace :: Eq Namespace where
+  eq (Namespace x) (Namespace y) = x == y
 
-foreign import vtext """
-  var vtext = (function() {
-    var VText = require('virtual-dom/vnode/vtext');
-    return function (text) {
-      return new VText(text);
-    };
-  }());
-  """ :: String -> VTree
+instance ordNamespace :: Ord Namespace where
+  compare (Namespace x) (Namespace y) = compare x y
 
-foreign import widget """
-  var widget = (function() { 
-    return function (props) {
-      var rWidget = { type: 'Widget'};
-       
-      if(props.init)    { rWidget.init    = props.init };
-      if(props.update)  { rWidget.update  = props.update }; 
-      if(props.destroy) { rWidget.destroy = props.destroy };
+instance showNamespace :: Show Namespace where
+  show (Namespace s) = "Namespace " ++ s
 
-      return rWidget;
-    };
-  }());
-  """ :: forall props. { | props} -> VTree
+newtype Key = Key String
 
-foreign import thunk'  """
-  var thunk$prime  = (function() { 
-    return function (renderFn, nothing, just) {
-      var rThunk  = { type: 'Thunk'
-                    , render: function(prevNode) { 
-                                if (prevNode === null)
-                                  return renderFn(nothing);
-                                else
-                                  return renderFn(just(prevNode));
-                              }
-                    };
-      // No need for vnode here.  It is used internally by virtual-dom to cache
-      // the result of render.
-      return rThunk;
-    };
-  }());
-  """ :: Fn3  (Maybe VTree -> VTree) 
-              (Maybe VTree) 
-              (VTree -> Maybe VTree) 
-              VTree
+instance eqKey :: Eq Key where
+  eq (Key x) (Key y) = x == y
 
--- Render a VTree using custom logic function.  The logic can examine the 
--- previous VTree before returning the new (or same) one.  The result of the 
--- render function must be a vnode, vtext, or widget.  This constraint is not
--- enforced by the types.
-thunk :: (Maybe VTree -> VTree) -> VTree
-thunk render = runFn3 thunk' render Nothing Just
+instance ordKey :: Ord Key where
+  compare (Key x) (Key y) = compare x y
 
-foreign import data VHook :: *
+instance showKey :: Show Key where
+  show (Key s) = "Key " ++ s
 
-foreign import vhook  """
-  var vhook  = (function() { 
-    return function (props) {
-      var rVHook  = function () { };
-      if(props.hook)   { rVHook.prototype.hook    = props.hook };
-      if(props.unhook) { rVHook.prototype.unhook  = props.unhook }; 
-      return new rVHook;
-    };
-  }());
-  """ :: forall props. { | props } -> VHook
+vnode :: forall props. TagName -> { | props} -> Array VTree -> VTree
+vnode tag props children = vnodeImpl (toNullable Nothing) tag (toNullable Nothing) props children
 
-foreign import showVHookImpl
-  "var showVHookImpl = JSON.stringify;" :: VHook -> String
+vnode' :: forall props. Namespace -> TagName -> Key -> { | props} -> Array VTree -> VTree
+vnode' ns tag key props children = vnodeImpl (toNullable $ Just ns) tag (toNullable $ Just key) props children
 
-instance showVHook :: Show VHook where
-  show = showVHookImpl
+foreign import vnodeImpl :: forall props. Nullable Namespace -> TagName -> Nullable Key -> { | props} -> Array VTree -> VTree
 
-
+foreign import vtext :: String -> VTree
