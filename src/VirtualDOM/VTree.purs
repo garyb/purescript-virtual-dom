@@ -9,6 +9,7 @@ module VirtualDOM.VTree
   , vhook
   ) where
 
+import Prelude
 import Data.Function
 import Data.Maybe
 

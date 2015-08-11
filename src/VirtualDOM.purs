@@ -5,6 +5,7 @@ module VirtualDOM
   , patch
   ) where
 
+import Prelude
 import Control.Monad.Eff
 import Data.Function
 import DOM
