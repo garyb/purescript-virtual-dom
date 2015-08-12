@@ -5,6 +5,7 @@ module VirtualDOM
   , patch
   ) where
 
+import Prelude
 import Control.Monad.Eff
 import Data.Function
 import DOM
@@ -14,29 +15,19 @@ import VirtualDOM.VTree
 -- operation.  See virtual-dom/docs.jsig for details.                             
 foreign import data PatchObject :: *
 
-foreign import showPatchObjectImpl
-  "var showPatchObjectImpl = JSON.stringify;" :: PatchObject -> String
+foreign import showPatchObjectImpl :: PatchObject -> String
 
 instance showPatchObject :: Show PatchObject where
   show = showPatchObjectImpl
 
-foreign import createElement
-  "var createElement = require('virtual-dom/create-element');" :: VTree -> Node
+foreign import createElement :: VTree -> Node
 
-foreign import diff'
-  "var diff$prime = require('virtual-dom/diff');" :: Fn2 VTree VTree PatchObject
+foreign import diff_ :: Fn2 VTree VTree PatchObject
 
 diff :: VTree -> VTree -> PatchObject
-diff = runFn2 diff'
+diff = runFn2 diff_
 
-foreign import patch'
-  "var patch$prime = require('virtual-dom/patch');" :: Fn2 Node PatchObject Node
+foreign import patch_ :: forall e. Fn2 Node PatchObject (Eff (dom :: DOM | e) Node)
 
 patch :: forall e. PatchObject -> Node -> Eff (dom :: DOM | e) Node
-patch p n = mkEff \_ -> runFn2 patch' n p
-
-foreign import mkEff """
-  function mkEff(action) {
-    return action;
-  }
-  """ :: forall eff a. (Unit -> a) -> Eff eff a
+patch p n = runFn2 patch_ n p

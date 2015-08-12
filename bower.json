@@ -21,7 +21,10 @@
     "package.json"
   ],
   "dependencies": {
+    "purescript-prelude": "^0.1.1",
+    "purescript-functions": "^0.1.0",
+    "purescript-eff": "^0.1.0",
     "purescript-dom": "~0.1.1",
-    "purescript-maybe":"~0.2.1"
+    "purescript-maybe":"^0.3.4"
   }
 }
