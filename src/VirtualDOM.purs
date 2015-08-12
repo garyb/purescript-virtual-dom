@@ -27,9 +27,7 @@ foreign import diff_ :: Fn2 VTree VTree PatchObject
 diff :: VTree -> VTree -> PatchObject
 diff = runFn2 diff_
 
-foreign import patch_ :: Fn2 Node PatchObject Node
+foreign import patch_ :: forall e. Fn2 Node PatchObject (Eff (dom :: DOM | e) Node)
 
 patch :: forall e. PatchObject -> Node -> Eff (dom :: DOM | e) Node
-patch p n = mkEff \_ -> runFn2 patch_ n p
-
-foreign import mkEff :: forall eff a. (Unit -> a) -> Eff eff a
+patch p n = runFn2 patch_ n p

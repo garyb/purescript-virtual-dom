@@ -8,9 +8,9 @@ exports.createElement = require('virtual-dom/create-element');
 
 exports.diff_ = require('virtual-dom/diff');
 
-exports.patch_ = require('virtual-dom/patch');
-
-exports.mkEff = function (action) {
-    return action;
+exports.patch_ = function (n, p) {
+    var patch = require('virtual-dom/patch');
+    return function () {
+        return patch(n, p);
+    };
 };
-
